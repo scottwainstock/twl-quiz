@@ -82,11 +82,11 @@ public class TWLQuiz extends Activity {
 	}
 
 	private void correct() {
-		findViewById(R.id.word).setBackgroundColor(Color.GREEN);
+		word.setBackgroundColor(Color.GREEN);
 	}
 
 	private void incorrect() {
-		findViewById(R.id.word).setBackgroundColor(Color.RED);		
+		word.setBackgroundColor(Color.RED);		
 	}
 
 	private String realWord() {
