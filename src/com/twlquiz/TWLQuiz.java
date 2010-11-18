@@ -3,14 +3,14 @@ package com.twlquiz;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.TableRow.LayoutParams;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -18,8 +18,7 @@ public class TWLQuiz extends Activity {
 	private final String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 	private TextView word;
-	private ListView historyList;
-	private List<String> yourHistory = new ArrayList<String>();
+	private TableLayout historyTable;
 	private String currentWord;
 	private boolean isGood = false;
 	private String[] twlThrees = { 
@@ -27,66 +26,69 @@ public class TWLQuiz extends Activity {
 	};
 	private List<String> twlThreesList = Arrays.asList(twlThrees);
 
-
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
 		word = (TextView)findViewById(R.id.word);
-		historyList = (ListView)findViewById(R.id.history);
+		historyTable = (TableLayout)findViewById(R.id.history);
+
 		getWord();
 	}
 
 	public void displayWord(View view) {
 		boolean gotItRight = false;
-		
+
 		switch (view.getId()) {
 		case R.id.pressedGood :
 			if (isGood) {
 				gotItRight = true;
 			}
-			
+
 			break;
 		case R.id.pressedPhony :
 			if (!isGood) {
 				gotItRight = true;
 			}
-			
+
 			break;
 		default :
 			break;
 		}
 
-		if (gotItRight) {
-			correct();
-		} else {
-			incorrect();
-		}
-		
 		logHistory(gotItRight);
 		getWord(); 
 	}
 
-	private void logHistory(Boolean gotItRight) {		
-		yourHistory.add(currentWord + ": " + (isGood ? "GOOD" : "PHONY"));
+	private void logHistory(Boolean gotItRight) {
+		TableRow tableRow = new TableRow(this);
+		tableRow.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));   
+
+		if (gotItRight) {
+			tableRow.setBackgroundColor(Color.GREEN);
+		} else {
+			tableRow.setBackgroundColor(Color.RED);
+		}
+
+		tableRow.addView(formatHistoryText(currentWord));
+		tableRow.addView(formatHistoryText(isGood ? "GOOD" : "PHONY"));
 		
-		Collections.reverse(yourHistory);
-		
-		historyList.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, yourHistory));
+		historyTable.addView(tableRow, 0, new TableLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
 	}
 	
+	private TextView formatHistoryText(String text) {
+		TextView historyText = new TextView(this);
+		historyText.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+		historyText.setTextSize(30);
+		historyText.setText(text + "   ");
+		
+		return historyText;
+	}
+
 	private String getWord() {
 		currentWord = (new Random().nextInt(2) == 1) ? realWord() : phonyWord(); 
 
 		return currentWord;
-	}
-
-	private void correct() {
-		findViewById(R.id.word).setBackgroundColor(Color.GREEN);
-	}
-
-	private void incorrect() {
-		findViewById(R.id.word).setBackgroundColor(Color.RED);		
 	}
 
 	private String realWord() {
@@ -104,7 +106,7 @@ public class TWLQuiz extends Activity {
 		while(twlThreesList.contains(phonyWord) == true) {
 			phonyWord = randomLetter() + randomLetter() + randomLetter();
 		}
-		
+
 		word.setText(phonyWord);
 
 		isGood = false;

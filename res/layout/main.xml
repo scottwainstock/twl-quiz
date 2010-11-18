@@ -3,22 +3,29 @@
 	android:orientation="vertical" android:layout_width="fill_parent"
 	android:background="#000000" android:layout_height="fill_parent"
 	android:id="@+id/canvas">
+
 	<TextView android:gravity="center_horizontal"
 		android:layout_width="fill_parent" android:textColor="#ffffff"
 		android:textSize="50pt" android:textStyle="bold"
 		android:layout_height="wrap_content" android:id="@+id/word" />
+
 	<RelativeLayout android:id="@+id/buttons"
 		android:layout_height="wrap_content" android:layout_width="fill_parent"
-		android:layout_below="@+id/word" android:gravity="center_horizontal">
+		android:layout_below="@+id/word" android:gravity="center_horizontal" android:paddingBottom="20dip">
 		<Button android:layout_width="wrap_content" android:id="@+id/pressedGood"
 			android:layout_height="wrap_content" android:text="Good"
-			android:textSize="20pt" android:clickable="true" android:onClick="displayWord"
-			android:layout_below="@+id/word" />
+			android:textSize="20pt" android:clickable="true" android:onClick="displayWord" />
 		<Button android:layout_width="wrap_content" android:id="@+id/pressedPhony"
 			android:textSize="20pt" android:layout_height="wrap_content"
 			android:text="Phony" android:clickable="true" android:onClick="displayWord"
 			android:layout_toRightOf="@+id/pressedGood" />
 	</RelativeLayout>
-	<ListView android:id="@+id/history" android:layout_width="fill_parent"
-		android:layout_height="wrap_content" android:layout_below="@+id/buttons" />
+
+	<ScrollView android:layout_below="@+id/buttons"
+		android:scrollbarAlwaysDrawHorizontalTrack="true"
+		android:layout_width="fill_parent" android:layout_height="wrap_content">
+		<TableLayout android:id="@+id/history"
+			android:layout_width="fill_parent" android:layout_height="fill_parent" />
+	</ScrollView>
+
 </RelativeLayout>
