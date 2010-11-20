@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Random;
 
 public class TWLQuiz extends Activity {
-	private final String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	private final char[] alphabet = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
 
 	private LinearLayout wordContainer;
 	private TableLayout historyTable;
@@ -95,31 +95,42 @@ public class TWLQuiz extends Activity {
 	}
 
 	private String realWord() {
-		String realWord = twlThrees[new Random().nextInt(twlThrees.length)];
+		String realWord = generateRealWord();
+		
 		populateWordContainer(realWord);
-
 		isGood = true;
 
 		return realWord;
 	}
 
 	private String phonyWord() {
-		String phonyWord = randomLetter() + randomLetter() + randomLetter();
-
+		String phonyWord = generatePhonyWord();
+		
 		while(twlThreesList.contains(phonyWord) == true) {
-			phonyWord = randomLetter() + randomLetter() + randomLetter();
+			phonyWord = generatePhonyWord();
 		}
 
 		populateWordContainer(phonyWord);
-
 		isGood = false;
 
 		return phonyWord;
 	}
+	
+	private String generateRealWord() {
+		return twlThrees[new Random().nextInt(twlThrees.length)];
+	}
+	
+	private String generatePhonyWord() {
+		char[] phonyLetters = generateRealWord().toCharArray();
+		
+		phonyLetters[new Random().nextInt(phonyLetters.length)] = randomLetter();
+		
+		return new String(phonyLetters);
+	}
 
-	private String randomLetter() {
+	private char randomLetter() {
 		int seed = (int)(Math.random()*26);
-		return alphabet.substring(seed, seed + 1);
+		return alphabet[seed];
 	}
 
 	private void populateWordContainer(String word) {
