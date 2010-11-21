@@ -19,7 +19,8 @@ import java.util.Random;
 
 public class TWLQuiz extends Activity {
 	private final char[] alphabet = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
-
+	private final char[] vowels = {'A','E','I','O','U','Y'};
+	
 	private LinearLayout wordContainer;
 	private TableLayout historyTable;
 	private String currentWord;
@@ -123,14 +124,24 @@ public class TWLQuiz extends Activity {
 	private String generatePhonyWord() {
 		char[] phonyLetters = generateRealWord().toCharArray();
 		
-		phonyLetters[new Random().nextInt(phonyLetters.length)] = randomLetter();
+		int randomLetterIndex = new Random().nextInt(phonyLetters.length);
+		
+		phonyLetters[randomLetterIndex] = generatePhonyLetter(phonyLetters[randomLetterIndex]);
 		
 		return new String(phonyLetters);
 	}
 
-	private char randomLetter() {
+	private char generatePhonyLetter(char letterToSwap) {
+		if (Arrays.asList(vowels).contains(letterToSwap)) {
+			return randomLetter(vowels);
+		} else {
+			return randomLetter(alphabet);
+		}
+	}
+	
+	private char randomLetter(char[] source) {
 		int seed = (int)(Math.random()*26);
-		return alphabet[seed];
+		return source[seed];
 	}
 
 	private void populateWordContainer(String word) {
