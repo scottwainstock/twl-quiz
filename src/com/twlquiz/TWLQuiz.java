@@ -1,16 +1,13 @@
 package com.twlquiz;
 
 import android.app.Activity;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
-import android.widget.TextView;
 import android.widget.TableRow.LayoutParams;
 
 import java.util.Arrays;
@@ -18,9 +15,13 @@ import java.util.List;
 import java.util.Random;
 
 public class TWLQuiz extends Activity {
+	private final int PHONY_LETTER_TYPE   = 0;
+	private final int GOOD_LETTER_TYPE    = 1;
+	private final int REGULAR_LETTER_TYPE = 2;
+
 	private final char[] alphabet = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
 	private final char[] vowels = {'A','E','I','O','U','Y'};
-	
+
 	private LinearLayout wordContainer;
 	private TableLayout historyTable;
 	private String currentWord;
@@ -68,25 +69,20 @@ public class TWLQuiz extends Activity {
 		TableRow tableRow = new TableRow(this);
 		tableRow.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));   
 
-		if (gotItRight) {
-			tableRow.setBackgroundColor(Color.GREEN);
-		} else {
-			tableRow.setBackgroundColor(Color.RED);
-		}
+		LinearLayout guessedWord = formatHistoryText(currentWord, gotItRight ? GOOD_LETTER_TYPE : PHONY_LETTER_TYPE);
+		guessedWord.setPadding(0, 0, 10, 0);
 
-		tableRow.addView(formatHistoryText(currentWord));
-		tableRow.addView(formatHistoryText(isGood ? "GOOD" : "PHONY"));
+		tableRow.addView(guessedWord);
+		tableRow.addView(formatHistoryText(isGood ? "GOOD" : "PHONY", isGood ? GOOD_LETTER_TYPE : PHONY_LETTER_TYPE));
 
 		historyTable.addView(tableRow, 0, new TableLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
 	}
 
-	private TextView formatHistoryText(String text) {
-		TextView historyText = new TextView(this);
-		historyText.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
-		historyText.setTextSize(30);
-		historyText.setText(text + "   ");
+	private LinearLayout formatHistoryText(String text, int letterType) {
+		LinearLayout historyText = new LinearLayout(getBaseContext());
+		historyText.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
 
-		return historyText;
+		return populateWordContainer(text, historyText, letterType);
 	}
 
 	private String getWord() {
@@ -97,8 +93,8 @@ public class TWLQuiz extends Activity {
 
 	private String realWord() {
 		String realWord = generateRealWord();
-		
-		populateWordContainer(realWord);
+
+		populateWordContainer(realWord, wordContainer, REGULAR_LETTER_TYPE);
 		isGood = true;
 
 		return realWord;
@@ -106,28 +102,28 @@ public class TWLQuiz extends Activity {
 
 	private String phonyWord() {
 		String phonyWord = generatePhonyWord();
-		
+
 		while(twlThreesList.contains(phonyWord) == true) {
 			phonyWord = generatePhonyWord();
 		}
 
-		populateWordContainer(phonyWord);
+		populateWordContainer(phonyWord, wordContainer, REGULAR_LETTER_TYPE);
 		isGood = false;
 
 		return phonyWord;
 	}
-	
+
 	private String generateRealWord() {
 		return twlThrees[new Random().nextInt(twlThrees.length)];
 	}
-	
+
 	private String generatePhonyWord() {
 		char[] phonyLetters = generateRealWord().toCharArray();
-		
+
 		int randomLetterIndex = new Random().nextInt(phonyLetters.length);
-		
+
 		phonyLetters[randomLetterIndex] = generatePhonyLetter(phonyLetters[randomLetterIndex]);
-		
+
 		return new String(phonyLetters);
 	}
 
@@ -138,26 +134,48 @@ public class TWLQuiz extends Activity {
 			return randomLetter(alphabet);
 		}
 	}
-	
+
 	private char randomLetter(char[] source) {
 		int seed = (int)(Math.random()*26);
 		return source[seed];
 	}
 
-	private void populateWordContainer(String word) {
+	private LinearLayout populateWordContainer(String word, LinearLayout container, int letterType) {
 		word = word.toLowerCase();
-		wordContainer.removeAllViews();
-		
+		container.removeAllViews();
+
 		char[] letters = word.toCharArray();
 
 		for (int i = 0; i < letters.length; i++) {
+			String letterFileName = "com.twlquiz:drawable/";
 			ImageView letterImage = new ImageView(this);
 			letterImage.setAdjustViewBounds(true);
-			letterImage.setMaxHeight(100);
-			letterImage.setMaxWidth(100);
-			letterImage.setImageDrawable(getResources().getDrawable(getResources().getIdentifier("com.twlquiz:drawable/letter_" + letters[i], null, null)));
 			
-			wordContainer.addView(letterImage);
+			switch (letterType) {
+			case PHONY_LETTER_TYPE:
+				letterImage.setMaxHeight(40);
+				letterImage.setMaxWidth(40);
+				letterFileName = letterFileName.concat("phony_letter_" + letters[i]);
+				break;
+			case GOOD_LETTER_TYPE:
+				letterImage.setMaxHeight(40);
+				letterImage.setMaxWidth(40);
+				letterFileName = letterFileName.concat("good_letter_" + letters[i]);
+				break;
+			case REGULAR_LETTER_TYPE:
+				letterImage.setMaxHeight(90);
+				letterImage.setMaxWidth(90);
+				letterFileName = letterFileName.concat("letter_" + letters[i]);
+				break;
+			default:
+				break;
+			}
+
+			letterImage.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(letterFileName, null, null)));
+
+			container.addView(letterImage);
 		}
+
+		return container;
 	}
 }

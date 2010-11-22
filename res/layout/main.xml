@@ -4,21 +4,42 @@
 	android:background="#000000" android:layout_height="fill_parent"
 	android:id="@+id/canvas">
 
-	<LinearLayout android:gravity="center_horizontal"
+	<LinearLayout android:paddingTop="10dip" android:gravity="center_horizontal"
 		android:layout_width="fill_parent" android:layout_height="wrap_content"
 		android:id="@+id/wordContainer" />
 
 	<RelativeLayout android:id="@+id/buttons"
 		android:layout_height="wrap_content" android:layout_width="fill_parent"
 		android:layout_below="@+id/wordContainer" android:gravity="center_horizontal"
-		android:paddingBottom="20dip" android:paddingTop="20dip">
-		<Button android:layout_width="wrap_content" android:id="@+id/pressedGood"
-			android:layout_height="wrap_content" android:text="Good"
-			android:textSize="20pt" android:clickable="true" android:onClick="displayWord" />
-		<Button android:layout_width="wrap_content" android:id="@+id/pressedPhony"
-			android:textSize="20pt" android:layout_height="wrap_content"
-			android:text="Phony" android:clickable="true" android:onClick="displayWord"
-			android:layout_toRightOf="@+id/pressedGood" />
+		android:paddingBottom="10dip" android:paddingTop="10dip">
+		<LinearLayout android:layout_height="wrap_content"
+			android:paddingRight="5dip" android:layout_width="wrap_content"
+			android:clickable="true" android:id="@+id/pressedGood"
+			android:onClick="displayWord">
+			<ImageView android:layout_width="35dip" android:padding="0dip"
+				android:layout_height="35dip" android:src="@drawable/letter_g" />
+			<ImageView android:layout_width="35dip" android:padding="0dip"
+				android:layout_height="35dip" android:src="@drawable/letter_o" />
+			<ImageView android:layout_width="35dip" android:padding="0dip"
+				android:layout_height="35dip" android:src="@drawable/letter_o" />
+			<ImageView android:layout_width="35dip" android:padding="0dip"
+				android:layout_height="35dip" android:src="@drawable/letter_d" />
+		</LinearLayout>
+		<LinearLayout android:layout_height="wrap_content"
+			android:layout_toRightOf="@+id/pressedGood" android:layout_width="wrap_content"
+			android:clickable="true" android:id="@+id/pressedPhony"
+			android:onClick="displayWord">
+			<ImageView android:layout_width="35dip" android:padding="0dip"
+				android:layout_height="35dip" android:src="@drawable/letter_p" />
+			<ImageView android:layout_width="35dip" android:padding="0dip"
+				android:layout_height="35dip" android:src="@drawable/letter_h" />
+			<ImageView android:layout_width="35dip" android:padding="0dip"
+				android:layout_height="35dip" android:src="@drawable/letter_o" />
+			<ImageView android:layout_width="35dip" android:padding="0dip"
+				android:layout_height="35dip" android:src="@drawable/letter_n" />
+			<ImageView android:layout_width="35dip" android:padding="0dip"
+				android:layout_height="35dip" android:src="@drawable/letter_y" />
+		</LinearLayout>
 	</RelativeLayout>
 
 	<ScrollView android:layout_below="@+id/buttons"
