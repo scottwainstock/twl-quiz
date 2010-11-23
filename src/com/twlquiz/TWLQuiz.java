@@ -3,13 +3,16 @@ package com.twlquiz;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
+import android.widget.Toast;
 import android.widget.TableRow.LayoutParams;
 
 import java.io.BufferedReader;
@@ -21,9 +24,12 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class TWLQuiz extends Activity {
-	private final int BAD_LETTER_TYPE     = 0;
-	private final int GOOD_LETTER_TYPE    = 1;
-	private final int REGULAR_LETTER_TYPE = 2;
+	private final int BAD_LETTER_TYPE        = 0;
+	private final int GOOD_LETTER_TYPE       = 1;
+	private final int REGULAR_LETTER_TYPE    = 2;
+
+	private final int QUIZ_LETTER_SIZE       = 80;
+	private final int HISTORICAL_LETTER_SIZE = 40;
 
 	private final int MENU_TWOS   = 0;
 	private final int MENU_THREES = 1;
@@ -50,14 +56,14 @@ public class TWLQuiz extends Activity {
 
 	private void loadWordList(String list) {
 		wordList.clear();
-		
+
 		try {
 			InputStream inputStream = this.getResources().openRawResource(getResources().getIdentifier("com.twlquiz:raw/" + list, null, null));
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 			String line;
 
 			while ((line = bufferedReader.readLine()) != null) {
-				String[] parsedLine = line.split("\\s+"); 		    	
+				String[] parsedLine = line.split("\\s+", 2);
 				wordList.put(parsedLine[0], parsedLine[1]);
 			}
 		} catch (IOException ioe) {
@@ -93,7 +99,23 @@ public class TWLQuiz extends Activity {
 
 	private void logHistory(Boolean gotItRight) {
 		TableRow tableRow = new TableRow(this);
-		tableRow.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));   
+		tableRow.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT)); 
+		tableRow.setContentDescription(currentWord);
+		
+		tableRow.setOnLongClickListener(new OnLongClickListener() {
+			public boolean onLongClick(View view) {
+				Object definition = wordList.get(view.getContentDescription());
+				if (definition == null) {
+					definition = "THIS IS NOT A WORD";
+				} 
+				
+				Toast toastDefinition = Toast.makeText(getBaseContext(), (CharSequence) definition, Toast.LENGTH_LONG);
+				toastDefinition.setGravity(Gravity.TOP, 0, 0);
+				toastDefinition.show();
+				
+				return false;
+			}
+		});
 
 		LinearLayout guessedWord = formatHistoryText(currentWord, gotItRight ? GOOD_LETTER_TYPE : BAD_LETTER_TYPE);
 		guessedWord.setPadding(0, 0, 10, 0);
@@ -119,7 +141,7 @@ public class TWLQuiz extends Activity {
 
 	private String realWord() {
 		String realWord = generateRealWord();
-		
+
 		populateWordContainer(realWord, wordContainer, REGULAR_LETTER_TYPE);
 		isGood = true;
 
@@ -127,10 +149,10 @@ public class TWLQuiz extends Activity {
 	}
 
 	private String badWord() {
-		String badWord = generatebadWord();
+		String badWord = generateBadWord();
 
 		while(wordList.containsKey(badWord) == true) {
-			badWord = generatebadWord();
+			badWord = generateBadWord();
 		}
 
 		populateWordContainer(badWord, wordContainer, REGULAR_LETTER_TYPE);
@@ -145,9 +167,8 @@ public class TWLQuiz extends Activity {
 		return (String) words[new Random().nextInt(wordList.size())];
 	}
 
-	private String generatebadWord() {
+	private String generateBadWord() {
 		char[] badLetters = generateRealWord().toCharArray();
-
 		int randomLetterIndex = new Random().nextInt(badLetters.length);
 
 		badLetters[randomLetterIndex] = generateBadLetter(badLetters[randomLetterIndex]);
@@ -164,7 +185,8 @@ public class TWLQuiz extends Activity {
 	}
 
 	private char randomLetter(char[] source) {
-		int seed = (int)(Math.random()*26);
+		int seed = (int)(Math.random() * ALPHABET.length);
+		
 		return source[seed];
 	}
 
@@ -179,21 +201,20 @@ public class TWLQuiz extends Activity {
 			ImageView letterImage = new ImageView(this);
 			letterImage.setAdjustViewBounds(true);
 
-
 			switch (letterType) {
 			case BAD_LETTER_TYPE:
-				letterImage.setMaxHeight(40);
-				letterImage.setMaxWidth(40);
+				letterImage.setMaxHeight(HISTORICAL_LETTER_SIZE);
+				letterImage.setMaxWidth(HISTORICAL_LETTER_SIZE);
 				letterFileName = letterFileName.concat("bad_letter_" + letters[i]);
 				break;
 			case GOOD_LETTER_TYPE:
-				letterImage.setMaxHeight(40);
-				letterImage.setMaxWidth(40);
+				letterImage.setMaxHeight(HISTORICAL_LETTER_SIZE);
+				letterImage.setMaxWidth(HISTORICAL_LETTER_SIZE);
 				letterFileName = letterFileName.concat("good_letter_" + letters[i]);
 				break;
 			case REGULAR_LETTER_TYPE:
-				letterImage.setMaxHeight(80);
-				letterImage.setMaxWidth(80);
+				letterImage.setMaxHeight(QUIZ_LETTER_SIZE);
+				letterImage.setMaxWidth(QUIZ_LETTER_SIZE);
 				letterFileName = letterFileName.concat("letter_" + letters[i]);
 				break;
 			default:
@@ -219,7 +240,6 @@ public class TWLQuiz extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case MENU_TWOS:
-			Log.i("TWOS:", "1");
 			loadWordList("twl_twos");
 			return true;
 		case MENU_THREES:
