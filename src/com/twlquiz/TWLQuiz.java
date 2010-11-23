@@ -3,6 +3,8 @@ package com.twlquiz;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -23,8 +25,12 @@ public class TWLQuiz extends Activity {
 	private final int GOOD_LETTER_TYPE    = 1;
 	private final int REGULAR_LETTER_TYPE = 2;
 
-	private final char[] alphabet = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
-	private final char[] vowels = {'A','E','I','O','U','Y'};
+	private final int MENU_TWOS   = 0;
+	private final int MENU_THREES = 1;
+	private final int MENU_FOURS  = 2;
+
+	private final char[] ALPHABET = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
+	private final char[] VOWELS   = {'A','E','I','O','U','Y'};
 
 	private LinearLayout wordContainer;
 	private TableLayout historyTable;
@@ -39,13 +45,14 @@ public class TWLQuiz extends Activity {
 		wordContainer = (LinearLayout)findViewById(R.id.wordContainer);
 		historyTable = (TableLayout)findViewById(R.id.history);
 
-		loadWordList("twl_threes.txt");
-		getWord();
+		loadWordList("twl_threes");
 	}
 
 	private void loadWordList(String list) {
+		wordList.clear();
+		
 		try {
-			InputStream inputStream = this.getResources().openRawResource(R.raw.twl_threes);
+			InputStream inputStream = this.getResources().openRawResource(getResources().getIdentifier("com.twlquiz:raw/" + list, null, null));
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 			String line;
 
@@ -56,6 +63,8 @@ public class TWLQuiz extends Activity {
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		}
+
+		getWord();
 	}
 
 	public void displayWord(View view) {
@@ -110,7 +119,7 @@ public class TWLQuiz extends Activity {
 
 	private String realWord() {
 		String realWord = generateRealWord();
-
+		
 		populateWordContainer(realWord, wordContainer, REGULAR_LETTER_TYPE);
 		isGood = true;
 
@@ -147,10 +156,10 @@ public class TWLQuiz extends Activity {
 	}
 
 	private char generatePhonyLetter(char letterToSwap) {
-		if (Arrays.asList(vowels).contains(letterToSwap)) {
-			return randomLetter(vowels);
+		if (Arrays.asList(VOWELS).contains(letterToSwap)) {
+			return randomLetter(VOWELS);
 		} else {
-			return randomLetter(alphabet);
+			return randomLetter(ALPHABET);
 		}
 	}
 
@@ -170,6 +179,7 @@ public class TWLQuiz extends Activity {
 			ImageView letterImage = new ImageView(this);
 			letterImage.setAdjustViewBounds(true);
 
+
 			switch (letterType) {
 			case PHONY_LETTER_TYPE:
 				letterImage.setMaxHeight(40);
@@ -182,8 +192,8 @@ public class TWLQuiz extends Activity {
 				letterFileName = letterFileName.concat("good_letter_" + letters[i]);
 				break;
 			case REGULAR_LETTER_TYPE:
-				letterImage.setMaxHeight(90);
-				letterImage.setMaxWidth(90);
+				letterImage.setMaxHeight(80);
+				letterImage.setMaxWidth(80);
 				letterFileName = letterFileName.concat("letter_" + letters[i]);
 				break;
 			default:
@@ -196,5 +206,30 @@ public class TWLQuiz extends Activity {
 		}
 
 		return container;
+	}
+
+	public boolean onCreateOptionsMenu(Menu menu) {
+		menu.add(MENU_TWOS, MENU_TWOS, MENU_TWOS, "2s");
+		menu.add(MENU_THREES, MENU_THREES, MENU_THREES, "3s");
+		menu.add(MENU_FOURS, MENU_FOURS, MENU_FOURS, "4s");
+
+		return true;
+	}
+
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case MENU_TWOS:
+			Log.i("TWOS:", "1");
+			loadWordList("twl_twos");
+			return true;
+		case MENU_THREES:
+			loadWordList("twl_threes");
+			return true;
+		case MENU_FOURS:
+			loadWordList("twl_fours");
+			return true;
+		default:
+			return false;
+		}
 	}
 }
