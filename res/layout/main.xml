@@ -17,29 +17,29 @@
 			android:clickable="true" android:id="@+id/pressedGood"
 			android:onClick="displayWord">
 			<ImageView android:layout_width="45dip"
-				android:layout_height="45dip" android:src="@drawable/letter_g" />
+				android:layout_height="45dip" android:src="@drawable/good_letter_g" />
 			<ImageView android:layout_width="45dip"
 				android:layout_marginLeft="-4dip" android:layout_height="45dip"
-				android:src="@drawable/letter_o" />
+				android:src="@drawable/good_letter_o" />
 			<ImageView android:layout_width="45dip"
 				android:layout_marginLeft="-4dip" android:layout_height="45dip"
-				android:src="@drawable/letter_o" />
+				android:src="@drawable/good_letter_o" />
 			<ImageView android:layout_width="45dip"
 				android:layout_marginLeft="-4dip" android:layout_height="45dip"
-				android:src="@drawable/letter_d" />
+				android:src="@drawable/good_letter_d" />
 		</LinearLayout>
 		<LinearLayout android:layout_height="wrap_content"
 			android:layout_toRightOf="@+id/pressedGood" android:layout_width="wrap_content"
 			android:clickable="true" android:id="@+id/pressedBad"
 			android:onClick="displayWord">
 			<ImageView android:layout_width="45dip"
-				android:layout_height="45dip" android:src="@drawable/letter_b" />
+				android:layout_height="45dip" android:src="@drawable/bad_letter_b" />
 			<ImageView android:layout_width="45dip"
 				android:layout_marginLeft="-4dip" android:layout_height="45dip"
-				android:src="@drawable/letter_a" />
+				android:src="@drawable/bad_letter_a" />
 			<ImageView android:layout_width="45dip"
 				android:layout_marginLeft="-4dip" android:layout_height="45dip"
-				android:src="@drawable/letter_d" />
+				android:src="@drawable/bad_letter_d" />
 		</LinearLayout>
 	</RelativeLayout>
 

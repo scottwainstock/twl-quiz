@@ -74,16 +74,19 @@ public class TWLQuiz extends Activity {
 	}
 
 	public void displayWord(View view) {
+		boolean yourGuess = false;
 		boolean gotItRight = false;
 
 		switch (view.getId()) {
 		case R.id.pressedGood :
+			yourGuess = true;
 			if (isGood) {
 				gotItRight = true;
 			}
 
 			break;
 		case R.id.pressedBad :
+			yourGuess = false;
 			if (!isGood) {
 				gotItRight = true;
 			}
@@ -93,11 +96,11 @@ public class TWLQuiz extends Activity {
 			break;
 		}
 
-		logHistory(gotItRight);
+		logHistory(yourGuess);
 		getWord(); 
 	}
 
-	private void logHistory(Boolean gotItRight) {
+	private void logHistory(Boolean yourGuess) {
 		TableRow tableRow = new TableRow(this);
 		tableRow.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT)); 
 		tableRow.setContentDescription(currentWord);
@@ -117,11 +120,11 @@ public class TWLQuiz extends Activity {
 			}
 		});
 
-		LinearLayout guessedWord = formatHistoryText(currentWord, gotItRight ? GOOD_LETTER_TYPE : BAD_LETTER_TYPE);
+		LinearLayout guessedWord = formatHistoryText(currentWord, isGood ? GOOD_LETTER_TYPE : BAD_LETTER_TYPE);
 		guessedWord.setPadding(0, 0, 10, 0);
 
 		tableRow.addView(guessedWord);
-		tableRow.addView(formatHistoryText(isGood ? "GOOD" : "BAD", isGood ? GOOD_LETTER_TYPE : BAD_LETTER_TYPE));
+		tableRow.addView(formatHistoryText(yourGuess ? "GOOD" : "BAD", yourGuess ? GOOD_LETTER_TYPE : BAD_LETTER_TYPE));
 
 		historyTable.addView(tableRow, 0, new TableLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
 	}
