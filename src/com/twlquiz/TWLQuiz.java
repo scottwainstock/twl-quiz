@@ -35,6 +35,7 @@ public class TWLQuiz extends Activity {
 	private final int MENU_THREES = 1;
 	private final int MENU_FOURS  = 2;
 	
+	private final int DISPLAY_STREAK_MILESTONE  = 5;
 	private final int INITIAL_FAIL_LIST_COUNTER = 2;
 
 	private final List<Character> CONSONANTS = Arrays.asList('B','C','D','F','G','H','J','K','L','M','N','P','Q','R','S','T','V','W','X','Z');
@@ -43,6 +44,7 @@ public class TWLQuiz extends Activity {
 	private LinearLayout wordContainer;
 	private TableLayout historyTable;
 	private String currentWord;
+	private int streakCounter = 0;
 	private boolean isGood = false;
 	private HashMap<String, String> wordList = new HashMap<String, String>();
 	private HashMap<String, Integer> failList = new HashMap<String, Integer>();
@@ -58,6 +60,7 @@ public class TWLQuiz extends Activity {
 	}
 
 	private void loadWordList(String list) {
+		streakCounter = 0;
 		failList.clear();
 		wordList.clear();
 		historyTable.removeAllViews();
@@ -92,6 +95,14 @@ public class TWLQuiz extends Activity {
 			}
 		}
 	}
+	
+	public void incrementStreak() {
+		streakCounter++;
+		
+		if (streakCounter % DISPLAY_STREAK_MILESTONE == 0) {
+			Toast.makeText(getBaseContext(), "STREAK: " + Integer.toString(streakCounter), Toast.LENGTH_SHORT).show();
+		}
+	}
 
 	public void displayWord(View view) {
 		switch (view.getId()) {
@@ -99,6 +110,7 @@ public class TWLQuiz extends Activity {
 			if (!isGood) {
 				addToFailList();
 			} else {
+				incrementStreak();
 				decrementFailList();
 			}
 			
@@ -109,6 +121,7 @@ public class TWLQuiz extends Activity {
 			if (isGood) {
 				addToFailList();
 			} else {
+				incrementStreak();
 				decrementFailList();
 			}
 			
