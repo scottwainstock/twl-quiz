@@ -2,7 +2,6 @@ package com.twlquiz;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,7 +18,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +34,8 @@ public class TWLQuiz extends Activity {
 	private final int MENU_TWOS   = 0;
 	private final int MENU_THREES = 1;
 	private final int MENU_FOURS  = 2;
+	
+	private final int INITIAL_FAIL_LIST_COUNTER = 2;
 
 	private final List<Character> CONSONANTS = Arrays.asList('B','C','D','F','G','H','J','K','L','M','N','P','Q','R','S','T','V','W','X','Z');
 	private final List<Character> VOWELS     = Arrays.asList('A','E','I','O','U','Y');
@@ -44,7 +44,8 @@ public class TWLQuiz extends Activity {
 	private TableLayout historyTable;
 	private String currentWord;
 	private boolean isGood = false;
-	private HashMap wordList = new HashMap();
+	private HashMap<String, String> wordList = new HashMap<String, String>();
+	private HashMap<String, Integer> failList = new HashMap<String, Integer>();
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -57,8 +58,9 @@ public class TWLQuiz extends Activity {
 	}
 
 	private void loadWordList(String list) {
-		historyTable.removeAllViews();
+		failList.clear();
 		wordList.clear();
+		historyTable.removeAllViews();
 
 		try {
 			InputStream inputStream = this.getResources().openRawResource(getResources().getIdentifier("com.twlquiz:raw/" + list, null, null));
@@ -75,31 +77,48 @@ public class TWLQuiz extends Activity {
 
 		getWord();
 	}
+	
+	public void addToFailList() {
+		failList.remove(currentWord);
+		failList.put(currentWord, INITIAL_FAIL_LIST_COUNTER);		
+	}
+	
+	public void decrementFailList() {
+		if (failList.containsKey(currentWord)) {
+			if (failList.get(currentWord) == 0) {
+				failList.remove(currentWord);
+			} else {
+				failList.put(currentWord, failList.get(currentWord) - 1);
+			}
+		}
+	}
 
 	public void displayWord(View view) {
-		boolean yourGuess = false;
-		boolean gotItRight = false;
-
 		switch (view.getId()) {
 		case R.id.pressedGood :
-			yourGuess = true;
-			if (isGood) {
-				gotItRight = true;
+			if (!isGood) {
+				addToFailList();
+			} else {
+				decrementFailList();
 			}
+			
+			logHistory(true);
 
 			break;
 		case R.id.pressedBad :
-			yourGuess = false;
-			if (!isGood) {
-				gotItRight = true;
+			if (isGood) {
+				addToFailList();
+			} else {
+				decrementFailList();
 			}
+			
+			logHistory(false);
 
 			break;
 		default :
 			break;
 		}
 
-		logHistory(yourGuess);
 		getWord(); 
 	}
 
@@ -183,17 +202,10 @@ public class TWLQuiz extends Activity {
 	}
 
 	private char generateBadLetter(char letterToSwap) {
-Log.i("SWAPPING: ", Character.toString(letterToSwap));
 		if (VOWELS.contains(letterToSwap)) {
-			char rand = randomLetter(VOWELS);
-Log.i("WITH: ", Character.toString(rand));
-		
-			return rand;
+			return randomLetter(VOWELS);
 		} else {
-			char rand = randomLetter(CONSONANTS);
-Log.i("WITH: ", Character.toString(rand));
-			return rand;
-
+			return randomLetter(CONSONANTS);
 		}
 	}
 
