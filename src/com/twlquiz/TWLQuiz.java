@@ -19,8 +19,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 public class TWLQuiz extends Activity {
@@ -35,8 +37,8 @@ public class TWLQuiz extends Activity {
 	private final int MENU_THREES = 1;
 	private final int MENU_FOURS  = 2;
 
-	private final char[] ALPHABET = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
-	private final char[] VOWELS   = {'A','E','I','O','U','Y'};
+	private final List<Character> CONSONANTS = Arrays.asList('B','C','D','F','G','H','J','K','L','M','N','P','Q','R','S','T','V','W','X','Z');
+	private final List<Character> VOWELS     = Arrays.asList('A','E','I','O','U','Y');
 
 	private LinearLayout wordContainer;
 	private TableLayout historyTable;
@@ -55,6 +57,7 @@ public class TWLQuiz extends Activity {
 	}
 
 	private void loadWordList(String list) {
+		historyTable.removeAllViews();
 		wordList.clear();
 
 		try {
@@ -180,17 +183,22 @@ public class TWLQuiz extends Activity {
 	}
 
 	private char generateBadLetter(char letterToSwap) {
-		if (Arrays.asList(VOWELS).contains(letterToSwap)) {
-			return randomLetter(VOWELS);
+Log.i("SWAPPING: ", Character.toString(letterToSwap));
+		if (VOWELS.contains(letterToSwap)) {
+			char rand = randomLetter(VOWELS);
+Log.i("WITH: ", Character.toString(rand));
+		
+			return rand;
 		} else {
-			return randomLetter(ALPHABET);
+			char rand = randomLetter(CONSONANTS);
+Log.i("WITH: ", Character.toString(rand));
+			return rand;
+
 		}
 	}
 
-	private char randomLetter(char[] source) {
-		int seed = (int)(Math.random() * ALPHABET.length);
-		
-		return source[seed];
+	private char randomLetter(List<Character> list) {
+		return list.get((int)(Math.random() * list.size()));
 	}
 
 	private LinearLayout populateWordContainer(String word, LinearLayout container, int letterType) {
