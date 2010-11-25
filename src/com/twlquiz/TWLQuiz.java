@@ -84,15 +84,24 @@ public class TWLQuiz extends TWLQuizUtil {
 			Toast.makeText(getBaseContext(), "STREAK: " + Integer.toString(streakCounter), Toast.LENGTH_SHORT).show();
 		}
 	}
+	
+	public void youGotItRight() {
+		incrementStreak();
+		decrementFailList();
+	}
+	
+	public void youGotItWrong() {
+		streakCounter = 0;
+		addToFailList();
+	}
 
 	public void displayWord(View view) {
 		switch (view.getId()) {
 		case R.id.pressedGood :
 			if (!isGood) {
-				addToFailList();
+				youGotItWrong();
 			} else {
-				incrementStreak();
-				decrementFailList();
+				youGotItRight();
 			}
 			
 			logHistory(true);
@@ -100,10 +109,9 @@ public class TWLQuiz extends TWLQuizUtil {
 			break;
 		case R.id.pressedBad :
 			if (isGood) {
-				addToFailList();
+				youGotItWrong();
 			} else {
-				incrementStreak();
-				decrementFailList();
+				youGotItRight();
 			}
 			
 			logHistory(false);
@@ -153,13 +161,31 @@ public class TWLQuiz extends TWLQuizUtil {
 	}
 
 	private String getWord() {
-		currentWord = (new Random().nextInt(2) == 1) ? realWord() : badWord(); 
+		int random = new Random().nextInt(10);
+		
+		if ((random <= 1) && !failList.isEmpty()) {
+			currentWord = failWord();
+		} else if (random <= 5) {
+			currentWord = realWord();
+		} else {
+			currentWord = badWord();
+		}
 
 		return currentWord;
 	}
 
+	private String failWord() {
+		String failWord = pickRandomWord(failList);
+		
+		populateWordContainer(failWord, wordContainer, REGULAR_LETTER_TYPE);
+		
+		isGood = wordList.containsKey(failWord) ? true : false;
+		
+		return failWord;
+	}
+
 	private String realWord() {
-		String realWord = generateRealWord();
+		String realWord = pickRandomWord(wordList);
 
 		populateWordContainer(realWord, wordContainer, REGULAR_LETTER_TYPE);
 		isGood = true;
@@ -180,14 +206,14 @@ public class TWLQuiz extends TWLQuizUtil {
 		return badWord;
 	}
 
-	private String generateRealWord() {
-		Object[] words =  wordList.keySet().toArray();
+	private String pickRandomWord(HashMap list) {
+		Object[] words =  list.keySet().toArray();
 
-		return (String) words[new Random().nextInt(wordList.size())];
+		return (String) words[new Random().nextInt(list.size())];
 	}
 
 	private String generateBadWord() {
-		char[] badLetters = generateRealWord().toCharArray();
+		char[] badLetters = pickRandomWord(wordList).toCharArray();
 		int randomLetterIndex = new Random().nextInt(badLetters.length);
 
 		badLetters[randomLetterIndex] = generateBadLetter(badLetters[randomLetterIndex]);
