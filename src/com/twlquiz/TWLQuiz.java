@@ -1,6 +1,5 @@
 package com.twlquiz;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.Menu;
@@ -18,29 +17,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-public class TWLQuiz extends Activity {
-	private final int BAD_LETTER_TYPE        = 0;
-	private final int GOOD_LETTER_TYPE       = 1;
-	private final int REGULAR_LETTER_TYPE    = 2;
-
-	private final int QUIZ_LETTER_SIZE       = 80;
-	private final int HISTORICAL_LETTER_SIZE = 40;
-
-	private final int MENU_TWOS   = 0;
-	private final int MENU_THREES = 1;
-	private final int MENU_FOURS  = 2;
-	
-	private final int DISPLAY_STREAK_MILESTONE  = 5;
-	private final int INITIAL_FAIL_LIST_COUNTER = 2;
-
-	private final List<Character> CONSONANTS = Arrays.asList('B','C','D','F','G','H','J','K','L','M','N','P','Q','R','S','T','V','W','X','Z');
-	private final List<Character> VOWELS     = Arrays.asList('A','E','I','O','U','Y');
-
+public class TWLQuiz extends TWLQuizUtil {
 	private LinearLayout wordContainer;
 	private TableLayout historyTable;
 	private String currentWord;
