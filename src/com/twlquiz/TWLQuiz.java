@@ -223,9 +223,19 @@ public class TWLQuiz extends TWLQuizUtil {
 
 	private char generateBadLetter(char letterToSwap) {
 		if (VOWELS.contains(letterToSwap)) {
-			return randomLetter(VOWELS);
+			return (new Random().nextInt(10) == 0) ? 'Y' : randomLetter(VOWELS);
 		} else {
-			return randomLetter(CONSONANTS);
+			char random = randomLetter(CONSONANTS);
+			
+			while (random == 'Z' || random == 'Q') {
+				if (new Random().nextInt(10) <= 1) {
+					return random;
+				} else {
+					random = randomLetter(CONSONANTS);
+				}
+			}
+			
+			return random;
 		}
 	}
 
