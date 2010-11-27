@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -116,9 +117,9 @@ public class TWLQuiz extends TWLQuizUtil {
 		
 		Cursor cursor = database.rawQuery("select high from streaks where type=?", new String[] { currentList });
 		cursor.moveToFirst();
-		int currentHigh = cursor.getColumnIndex("high");
+		int currentHigh = cursor.getInt(cursor.getColumnIndex("high"));
 
-		if ((currentHigh == 0) || (currentHigh > streakCounter)) {
+		if ((currentHigh == 0) || (currentHigh < streakCounter)) {
 			database.execSQL("update streaks set high = ? where type = ?", new String[] { Integer.toString(streakCounter), currentList });
 		}
 
