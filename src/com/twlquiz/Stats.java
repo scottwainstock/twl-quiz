@@ -19,12 +19,12 @@ public class Stats extends TWLQuizUtil {
 		highScoreTWLTwos = (TextView)findViewById(R.id.high_score_twl_twos);
 		highScoreTWLThrees = (TextView)findViewById(R.id.high_score_twl_threes);
 		highScoreTWLFours = (TextView)findViewById(R.id.high_score_twl_fours);
-		database = new DatabaseHelper(this).getWritableDatabase();
 
 		showStats();
 	}
 
 	private void showStats() {
+		database = new DatabaseHelper(this).getWritableDatabase();
 		Cursor cursor = database.rawQuery("select high from streaks where type in (?, ?, ?)", new String[] { "twl_twos", "twl_threes", "twl_fours" });
 		
 		cursor.moveToPosition(0);
@@ -37,5 +37,6 @@ public class Stats extends TWLQuizUtil {
 		highScoreTWLTwos.setText(cursor.getString(cursor.getColumnIndex("high")));
 
 		cursor.close();
+		database.close();
 	}
 }

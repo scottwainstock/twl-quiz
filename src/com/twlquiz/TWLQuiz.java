@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,11 +12,13 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.TableRow.LayoutParams;
 
@@ -35,6 +38,8 @@ public class TWLQuiz extends TWLQuizUtil {
 	private String currentWord;
 	private int streakCounter = 0;
 	private boolean isGood = false;
+	private boolean tileView = false;
+	private boolean playSound = false;
 	private HashMap<String, String> wordList = new HashMap<String, String>();
 	private HashMap<String, Integer> failList = new HashMap<String, Integer>();
 
@@ -51,6 +56,8 @@ public class TWLQuiz extends TWLQuizUtil {
 	}
 
 	private void loadPreferences() {
+		playSound = getSharedPreferences(PREFERENCES_FILE, 0).getBoolean("sound", false) ? true : false;
+		tileView = getSharedPreferences(PREFERENCES_FILE, 0).getBoolean("tileView", false) ? true : false;
 	}
 
 	private void loadWordList(String list) {
@@ -101,8 +108,7 @@ public class TWLQuiz extends TWLQuizUtil {
 	}
 
 	private void playSound(String fileName) {
-		SharedPreferences preferences = getSharedPreferences(PREFERENCES_FILE, 0);
-		if (preferences.getBoolean("sound", false)) {
+		if (playSound) {
 			MediaPlayer.create(getBaseContext(), getResources().getIdentifier("com.twlquiz:raw/" + fileName, null, null)).start();		
 		}
 	}
@@ -285,39 +291,60 @@ public class TWLQuiz extends TWLQuizUtil {
 	}
 
 	private LinearLayout populateWordContainer(String word, LinearLayout container, int letterType) {
-		word = word.toLowerCase();
 		container.removeAllViews();
 
-		char[] letters = word.toCharArray();
+		if (tileView || (letterType == REGULAR_LETTER_TYPE)) {
+			word = word.toLowerCase();
+		}
 
+		char[] letters = word.toCharArray();
 		for (int i = 0; i < letters.length; i++) {
 			String letterFileName = "com.twlquiz:drawable/";
+			TextView letterText = new TextView(this);
 			ImageView letterImage = new ImageView(this);
 			letterImage.setAdjustViewBounds(true);
 
 			switch (letterType) {
 			case BAD_LETTER_TYPE:
-				letterImage.setMaxHeight(HISTORICAL_LETTER_SIZE);
-				letterImage.setMaxWidth(HISTORICAL_LETTER_SIZE);
-				letterFileName = letterFileName.concat("bad_letter_" + letters[i]);
+				if (tileView) {
+					letterImage.setMaxHeight(HISTORICAL_LETTER_SIZE);
+					letterImage.setMaxWidth(HISTORICAL_LETTER_SIZE);
+					letterFileName = letterFileName.concat("bad_letter_" + letters[i]);
+				} else {
+					letterText.setBackgroundColor(Color.WHITE);
+					letterText.setTextColor(Color.BLACK);
+				}
+
 				break;
 			case GOOD_LETTER_TYPE:
-				letterImage.setMaxHeight(HISTORICAL_LETTER_SIZE);
-				letterImage.setMaxWidth(HISTORICAL_LETTER_SIZE);
-				letterFileName = letterFileName.concat("good_letter_" + letters[i]);
+				if (tileView) {
+					letterImage.setMaxHeight(HISTORICAL_LETTER_SIZE);
+					letterImage.setMaxWidth(HISTORICAL_LETTER_SIZE);
+					letterFileName = letterFileName.concat("good_letter_" + letters[i]);
+				} else {
+					letterText.setBackgroundColor(Color.BLACK);
+					letterText.setTextColor(Color.WHITE);
+				}
+				
 				break;
 			case REGULAR_LETTER_TYPE:
 				letterImage.setMaxHeight(QUIZ_LETTER_SIZE);
 				letterImage.setMaxWidth(QUIZ_LETTER_SIZE);
 				letterFileName = letterFileName.concat("letter_" + letters[i]);
+				
 				break;
 			default:
 				break;
 			}
 
-			letterImage.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(letterFileName, null, null)));
-
-			container.addView(letterImage);
+			if (tileView || (letterType == REGULAR_LETTER_TYPE)) {
+				letterImage.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(letterFileName, null, null)));
+				container.addView(letterImage);
+			} else {
+				letterText.setTextSize(HISTORICAL_LETTER_SIZE);
+				letterText.setText(Character.toString(letters[i]));
+				container.addView(letterText);
+			}
 		}
 
 		return container;
