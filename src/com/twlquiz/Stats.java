@@ -3,7 +3,6 @@ package com.twlquiz;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
 
 public class Stats extends TWLQuizUtil {
