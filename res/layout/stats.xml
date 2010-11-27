@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:background="#000000" android:layout_height="fill_parent">
+	<LinearLayout android:layout_width="wrap_content"
+		android:id="@+id/twos_container" android:layout_height="wrap_content">
+		<TextView android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="High Streak (2): " />
+		<TextView android:layout_width="wrap_content" android:id="@+id/high_score_twl_twos"
+			android:layout_height="wrap_content" />
+	</LinearLayout>
+	<LinearLayout android:layout_width="wrap_content"
+		android:id="@+id/threes_container" android:layout_height="wrap_content"
+		android:layout_below="@+id/twos_container">
+		<TextView android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="High Streak (3): " />
+		<TextView android:layout_width="wrap_content" android:id="@+id/high_score_twl_threes"
+			android:layout_height="wrap_content" />
+	</LinearLayout>
+	<LinearLayout android:layout_width="wrap_content"
+		android:id="@+id/fours_container" android:layout_height="wrap_content"
+		android:layout_below="@+id/threes_container">
+		<TextView android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="High Streak (4): " />
+		<TextView android:layout_width="wrap_content" android:id="@+id/high_score_twl_fours"
+			android:layout_height="wrap_content" />
+	</LinearLayout>
+</RelativeLayout>

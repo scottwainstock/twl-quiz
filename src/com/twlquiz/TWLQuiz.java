@@ -1,6 +1,10 @@
 package com.twlquiz;
 
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,6 +28,8 @@ import java.util.Random;
 public class TWLQuiz extends TWLQuizUtil {
 	private LinearLayout wordContainer;
 	private TableLayout historyTable;
+	private SQLiteDatabase database;
+	private String currentList;
 	private String currentWord;
 	private int streakCounter = 0;
 	private boolean isGood = false;
@@ -35,8 +41,9 @@ public class TWLQuiz extends TWLQuizUtil {
 		setContentView(R.layout.main);
 
 		wordContainer = (LinearLayout)findViewById(R.id.wordContainer);
-		historyTable = (TableLayout)findViewById(R.id.history);
-
+		historyTable = (TableLayout)findViewById(R.id.history);		
+		database = new DatabaseHelper(this).getWritableDatabase();
+		
 		loadWordList("twl_threes");
 	}
 
@@ -45,6 +52,7 @@ public class TWLQuiz extends TWLQuizUtil {
 		failList.clear();
 		wordList.clear();
 		historyTable.removeAllViews();
+		currentList = list;
 
 		try {
 			InputStream inputStream = this.getResources().openRawResource(getResources().getIdentifier("com.twlquiz:raw/" + list, null, null));
@@ -61,12 +69,12 @@ public class TWLQuiz extends TWLQuizUtil {
 
 		getWord();
 	}
-	
+
 	public void addToFailList() {
 		failList.remove(currentWord);
 		failList.put(currentWord, INITIAL_FAIL_LIST_COUNTER);		
 	}
-	
+
 	public void decrementFailList() {
 		if (failList.containsKey(currentWord)) {
 			if (failList.get(currentWord) == 0) {
@@ -76,21 +84,31 @@ public class TWLQuiz extends TWLQuizUtil {
 			}
 		}
 	}
-	
+
 	public void incrementStreak() {
 		streakCounter++;
-		
+
 		if (streakCounter % DISPLAY_STREAK_MILESTONE == 0) {
 			Toast.makeText(getBaseContext(), "STREAK: " + Integer.toString(streakCounter), Toast.LENGTH_SHORT).show();
 		}
 	}
-	
+
 	public void youGotItRight() {
 		incrementStreak();
 		decrementFailList();
 	}
-	
+
 	public void youGotItWrong() {
+		Cursor cursor = database.rawQuery("select high from streaks where type=?", new String[] { currentList });
+		cursor.moveToFirst();
+		int currentHigh = cursor.getColumnIndex("high");
+		
+		if ((currentHigh == 0) || (currentHigh > streakCounter)) {
+			database.execSQL("update streaks set high = ? where type = ?", new String[] { Integer.toString(streakCounter), currentList });
+		}
+
+		cursor.close();
+
 		streakCounter = 0;
 		addToFailList();
 	}
@@ -103,7 +121,7 @@ public class TWLQuiz extends TWLQuizUtil {
 			} else {
 				youGotItRight();
 			}
-			
+
 			logHistory(true);
 
 			break;
@@ -113,7 +131,7 @@ public class TWLQuiz extends TWLQuizUtil {
 			} else {
 				youGotItRight();
 			}
-			
+
 			logHistory(false);
 
 			break;
@@ -128,18 +146,18 @@ public class TWLQuiz extends TWLQuizUtil {
 		TableRow tableRow = new TableRow(this);
 		tableRow.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT)); 
 		tableRow.setContentDescription(currentWord);
-		
+
 		tableRow.setOnLongClickListener(new OnLongClickListener() {
 			public boolean onLongClick(View view) {
 				Object definition = wordList.get(view.getContentDescription());
 				if (definition == null) {
 					definition = "THIS IS NOT A WORD";
 				} 
-				
+
 				Toast toastDefinition = Toast.makeText(getBaseContext(), (CharSequence) definition, Toast.LENGTH_LONG);
 				toastDefinition.setGravity(Gravity.TOP, 0, 0);
 				toastDefinition.show();
-				
+
 				return false;
 			}
 		});
@@ -162,7 +180,7 @@ public class TWLQuiz extends TWLQuizUtil {
 
 	private String getWord() {
 		int random = new Random().nextInt(10);
-		
+
 		if ((random <= 1) && !failList.isEmpty()) {
 			currentWord = failWord();
 		} else if (random <= 5) {
@@ -176,11 +194,11 @@ public class TWLQuiz extends TWLQuizUtil {
 
 	private String failWord() {
 		String failWord = pickRandomWord(failList);
-		
+
 		populateWordContainer(failWord, wordContainer, REGULAR_LETTER_TYPE);
-		
+
 		isGood = wordList.containsKey(failWord) ? true : false;
-		
+
 		return failWord;
 	}
 
@@ -206,6 +224,7 @@ public class TWLQuiz extends TWLQuizUtil {
 		return badWord;
 	}
 
+	@SuppressWarnings("unchecked")
 	private String pickRandomWord(HashMap list) {
 		Object[] words =  list.keySet().toArray();
 
@@ -226,7 +245,7 @@ public class TWLQuiz extends TWLQuizUtil {
 			return (new Random().nextInt(10) == 0) ? 'Y' : randomLetter(VOWELS);
 		} else {
 			char random = randomLetter(CONSONANTS);
-			
+
 			while (random == 'Z' || random == 'Q') {
 				if (new Random().nextInt(10) <= 1) {
 					return random;
@@ -234,7 +253,7 @@ public class TWLQuiz extends TWLQuizUtil {
 					random = randomLetter(CONSONANTS);
 				}
 			}
-			
+
 			return random;
 		}
 	}
@@ -286,6 +305,7 @@ public class TWLQuiz extends TWLQuizUtil {
 		menu.add(MENU_TWOS, MENU_TWOS, MENU_TWOS, "2s");
 		menu.add(MENU_THREES, MENU_THREES, MENU_THREES, "3s");
 		menu.add(MENU_FOURS, MENU_FOURS, MENU_FOURS, "4s");
+		menu.add(MENU_STATS, MENU_STATS, MENU_STATS, "Stats");
 
 		return true;
 	}
@@ -301,6 +321,11 @@ public class TWLQuiz extends TWLQuizUtil {
 		case MENU_FOURS:
 			loadWordList("twl_fours");
 			return true;
+		case MENU_STATS:
+			Intent myIntent = new Intent();
+			myIntent.setClassName("com.twlquiz", "com.twlquiz.Stats");
+			startActivityForResult(myIntent, 22);
+			
 		default:
 			return false;
 		}

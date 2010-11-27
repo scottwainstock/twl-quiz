@@ -16,8 +16,9 @@ public class TWLQuizUtil extends Activity {
 	protected static final int MENU_TWOS   = 0;
 	protected static final int MENU_THREES = 1;
 	protected static final int MENU_FOURS  = 2;
-	
-	protected static final int DISPLAY_STREAK_MILESTONE  = 5;
+	protected static final int MENU_STATS  = 3;
+
+	protected static final int DISPLAY_STREAK_MILESTONE  = 10;
 	protected static final int INITIAL_FAIL_LIST_COUNTER = 2;
 
 	protected static final List<Character> CONSONANTS = Arrays.asList('B','C','D','F','G','H','J','K','L','M','N','P','Q','R','S','T','V','W','X','Z');
