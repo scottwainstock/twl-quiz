@@ -1,6 +1,8 @@
 package com.twlquiz;
 
-import android.app.Activity;
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -19,46 +21,38 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-public class TWLQuiz extends Activity {
-	private final int BAD_LETTER_TYPE        = 0;
-	private final int GOOD_LETTER_TYPE       = 1;
-	private final int REGULAR_LETTER_TYPE    = 2;
-
-	private final int QUIZ_LETTER_SIZE       = 80;
-	private final int HISTORICAL_LETTER_SIZE = 40;
-
-	private final int MENU_TWOS   = 0;
-	private final int MENU_THREES = 1;
-	private final int MENU_FOURS  = 2;
-
-	private final List<Character> CONSONANTS = Arrays.asList('B','C','D','F','G','H','J','K','L','M','N','P','Q','R','S','T','V','W','X','Z');
-	private final List<Character> VOWELS     = Arrays.asList('A','E','I','O','U','Y');
-
+public class TWLQuiz extends TWLQuizUtil {
 	private LinearLayout wordContainer;
 	private TableLayout historyTable;
+	private SQLiteDatabase database;
+	private String currentList;
 	private String currentWord;
+	private int streakCounter = 0;
 	private boolean isGood = false;
-	private HashMap wordList = new HashMap();
+	private HashMap<String, String> wordList = new HashMap<String, String>();
+	private HashMap<String, Integer> failList = new HashMap<String, Integer>();
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
 		wordContainer = (LinearLayout)findViewById(R.id.wordContainer);
-		historyTable = (TableLayout)findViewById(R.id.history);
-
+		historyTable = (TableLayout)findViewById(R.id.history);		
+		database = new DatabaseHelper(this).getWritableDatabase();
+		
 		loadWordList("twl_threes");
 	}
 
 	private void loadWordList(String list) {
-		historyTable.removeAllViews();
+		streakCounter = 0;
+		failList.clear();
 		wordList.clear();
+		historyTable.removeAllViews();
+		currentList = list;
 
 		try {
 			InputStream inputStream = this.getResources().openRawResource(getResources().getIdentifier("com.twlquiz:raw/" + list, null, null));
@@ -76,30 +70,75 @@ public class TWLQuiz extends Activity {
 		getWord();
 	}
 
-	public void displayWord(View view) {
-		boolean yourGuess = false;
-		boolean gotItRight = false;
+	public void addToFailList() {
+		failList.remove(currentWord);
+		failList.put(currentWord, INITIAL_FAIL_LIST_COUNTER);		
+	}
 
+	public void decrementFailList() {
+		if (failList.containsKey(currentWord)) {
+			if (failList.get(currentWord) == 0) {
+				failList.remove(currentWord);
+			} else {
+				failList.put(currentWord, failList.get(currentWord) - 1);
+			}
+		}
+	}
+
+	public void incrementStreak() {
+		streakCounter++;
+
+		if (streakCounter % DISPLAY_STREAK_MILESTONE == 0) {
+			Toast.makeText(getBaseContext(), "STREAK: " + Integer.toString(streakCounter), Toast.LENGTH_SHORT).show();
+		}
+	}
+
+	public void youGotItRight() {
+		incrementStreak();
+		decrementFailList();
+	}
+
+	public void youGotItWrong() {
+		Cursor cursor = database.rawQuery("select high from streaks where type=?", new String[] { currentList });
+		cursor.moveToFirst();
+		int currentHigh = cursor.getColumnIndex("high");
+		
+		if ((currentHigh == 0) || (currentHigh > streakCounter)) {
+			database.execSQL("update streaks set high = ? where type = ?", new String[] { Integer.toString(streakCounter), currentList });
+		}
+
+		cursor.close();
+
+		streakCounter = 0;
+		addToFailList();
+	}
+
+	public void displayWord(View view) {
 		switch (view.getId()) {
 		case R.id.pressedGood :
-			yourGuess = true;
-			if (isGood) {
-				gotItRight = true;
+			if (!isGood) {
+				youGotItWrong();
+			} else {
+				youGotItRight();
 			}
+
+			logHistory(true);
 
 			break;
 		case R.id.pressedBad :
-			yourGuess = false;
-			if (!isGood) {
-				gotItRight = true;
+			if (isGood) {
+				youGotItWrong();
+			} else {
+				youGotItRight();
 			}
+
+			logHistory(false);
 
 			break;
 		default :
 			break;
 		}
 
-		logHistory(yourGuess);
 		getWord(); 
 	}
 
@@ -107,18 +146,18 @@ public class TWLQuiz extends Activity {
 		TableRow tableRow = new TableRow(this);
 		tableRow.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT)); 
 		tableRow.setContentDescription(currentWord);
-		
+
 		tableRow.setOnLongClickListener(new OnLongClickListener() {
 			public boolean onLongClick(View view) {
 				Object definition = wordList.get(view.getContentDescription());
 				if (definition == null) {
 					definition = "THIS IS NOT A WORD";
 				} 
-				
+
 				Toast toastDefinition = Toast.makeText(getBaseContext(), (CharSequence) definition, Toast.LENGTH_LONG);
 				toastDefinition.setGravity(Gravity.TOP, 0, 0);
 				toastDefinition.show();
-				
+
 				return false;
 			}
 		});
@@ -140,13 +179,31 @@ public class TWLQuiz extends Activity {
 	}
 
 	private String getWord() {
-		currentWord = (new Random().nextInt(2) == 1) ? realWord() : badWord(); 
+		int random = new Random().nextInt(10);
+
+		if ((random <= 1) && !failList.isEmpty()) {
+			currentWord = failWord();
+		} else if (random <= 5) {
+			currentWord = realWord();
+		} else {
+			currentWord = badWord();
+		}
 
 		return currentWord;
 	}
 
+	private String failWord() {
+		String failWord = pickRandomWord(failList);
+
+		populateWordContainer(failWord, wordContainer, REGULAR_LETTER_TYPE);
+
+		isGood = wordList.containsKey(failWord) ? true : false;
+
+		return failWord;
+	}
+
 	private String realWord() {
-		String realWord = generateRealWord();
+		String realWord = pickRandomWord(wordList);
 
 		populateWordContainer(realWord, wordContainer, REGULAR_LETTER_TYPE);
 		isGood = true;
@@ -167,14 +224,15 @@ public class TWLQuiz extends Activity {
 		return badWord;
 	}
 
-	private String generateRealWord() {
-		Object[] words =  wordList.keySet().toArray();
+	@SuppressWarnings("unchecked")
+	private String pickRandomWord(HashMap list) {
+		Object[] words =  list.keySet().toArray();
 
-		return (String) words[new Random().nextInt(wordList.size())];
+		return (String) words[new Random().nextInt(list.size())];
 	}
 
 	private String generateBadWord() {
-		char[] badLetters = generateRealWord().toCharArray();
+		char[] badLetters = pickRandomWord(wordList).toCharArray();
 		int randomLetterIndex = new Random().nextInt(badLetters.length);
 
 		badLetters[randomLetterIndex] = generateBadLetter(badLetters[randomLetterIndex]);
@@ -183,17 +241,20 @@ public class TWLQuiz extends Activity {
 	}
 
 	private char generateBadLetter(char letterToSwap) {
-Log.i("SWAPPING: ", Character.toString(letterToSwap));
 		if (VOWELS.contains(letterToSwap)) {
-			char rand = randomLetter(VOWELS);
-Log.i("WITH: ", Character.toString(rand));
-		
-			return rand;
+			return (new Random().nextInt(10) == 0) ? 'Y' : randomLetter(VOWELS);
 		} else {
-			char rand = randomLetter(CONSONANTS);
-Log.i("WITH: ", Character.toString(rand));
-			return rand;
+			char random = randomLetter(CONSONANTS);
 
+			while (random == 'Z' || random == 'Q') {
+				if (new Random().nextInt(10) <= 1) {
+					return random;
+				} else {
+					random = randomLetter(CONSONANTS);
+				}
+			}
+
+			return random;
 		}
 	}
 
@@ -244,6 +305,7 @@ Log.i("WITH: ", Character.toString(rand));
 		menu.add(MENU_TWOS, MENU_TWOS, MENU_TWOS, "2s");
 		menu.add(MENU_THREES, MENU_THREES, MENU_THREES, "3s");
 		menu.add(MENU_FOURS, MENU_FOURS, MENU_FOURS, "4s");
+		menu.add(MENU_STATS, MENU_STATS, MENU_STATS, "Stats");
 
 		return true;
 	}
@@ -259,6 +321,11 @@ Log.i("WITH: ", Character.toString(rand));
 		case MENU_FOURS:
 			loadWordList("twl_fours");
 			return true;
+		case MENU_STATS:
+			Intent myIntent = new Intent();
+			myIntent.setClassName("com.twlquiz", "com.twlquiz.Stats");
+			startActivityForResult(myIntent, 22);
+			
 		default:
 			return false;
 		}
