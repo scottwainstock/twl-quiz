@@ -3,6 +3,7 @@ package com.twlquiz;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -43,7 +44,7 @@ public class TWLQuiz extends TWLQuizUtil {
 		wordContainer = (LinearLayout)findViewById(R.id.wordContainer);
 		historyTable = (TableLayout)findViewById(R.id.history);		
 		database = new DatabaseHelper(this).getWritableDatabase();
-		
+
 		loadWordList("twl_threes");
 	}
 
@@ -94,15 +95,19 @@ public class TWLQuiz extends TWLQuizUtil {
 	}
 
 	public void youGotItRight() {
+		MediaPlayer.create(getBaseContext(), R.raw.good).start();
+
 		incrementStreak();
 		decrementFailList();
 	}
 
 	public void youGotItWrong() {
+		MediaPlayer.create(getBaseContext(), R.raw.bad).start();
+		
 		Cursor cursor = database.rawQuery("select high from streaks where type=?", new String[] { currentList });
 		cursor.moveToFirst();
 		int currentHigh = cursor.getColumnIndex("high");
-		
+
 		if ((currentHigh == 0) || (currentHigh > streakCounter)) {
 			database.execSQL("update streaks set high = ? where type = ?", new String[] { Integer.toString(streakCounter), currentList });
 		}
@@ -325,7 +330,7 @@ public class TWLQuiz extends TWLQuizUtil {
 			Intent myIntent = new Intent();
 			myIntent.setClassName("com.twlquiz", "com.twlquiz.Stats");
 			startActivityForResult(myIntent, 22);
-			
+
 		default:
 			return false;
 		}
