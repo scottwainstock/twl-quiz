@@ -95,6 +95,7 @@ public class TWLQuiz extends TWLQuizUtil {
 		streakCounter++;
 
 		if (streakCounter % DISPLAY_STREAK_MILESTONE == 0) {
+			playSound("streak");
 			Toast.makeText(getBaseContext(), "STREAK: " + Integer.toString(streakCounter), Toast.LENGTH_SHORT).show();
 		}
 	}
