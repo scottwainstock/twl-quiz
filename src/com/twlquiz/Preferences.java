@@ -27,26 +27,15 @@ public class Preferences extends TWLQuizUtil {
 		sound = (ToggleButton) findViewById(R.id.sound);
 		tileView = (ToggleButton) findViewById(R.id.tile);
 		resetStats = (Button) findViewById(R.id.reset_stats);
-		preferences = getSharedPreferences(PREFERENCES_FILE, 0).edit();	
+		preferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit();	
 		database = new DatabaseHelper(this).getWritableDatabase();
 
 		initializePreferences();
 	}
 
 	private void initializePreferences() {
-		sound.setChecked(getSharedPreferences(PREFERENCES_FILE, 0).getBoolean("sound", false) ? true : false);
-		sound.setOnClickListener(new OnClickListener() {
-			public void onClick(View view) {
-				preferences.putBoolean("sound", sound.isChecked() ? true : false).commit();
-			}
-		});
-
-		tileView.setChecked(getSharedPreferences(PREFERENCES_FILE, 0).getBoolean("tileView", false) ? true : false);
-		tileView.setOnClickListener(new OnClickListener() {
-			public void onClick(View view) {
-				preferences.putBoolean("tileView", tileView.isChecked() ? true : false).commit();
-			}
-		});
+		setupToggleButton(sound, "sound");
+		setupToggleButton(tileView, "tileView");
 
 		resetStats.setOnClickListener(new OnClickListener() {
 			public void onClick(View view) {
@@ -62,6 +51,16 @@ public class Preferences extends TWLQuizUtil {
 				confirm.show();
 
 				return;
+			}
+		});
+	}
+
+	private void setupToggleButton(final ToggleButton button, final String prefName) {
+		button.setChecked(getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean(prefName, true) ? true : false);
+		
+		button.setOnClickListener(new OnClickListener() {
+			public void onClick(View view) {
+				preferences.putBoolean(prefName, button.isChecked() ? true : false).commit();
 			}
 		});
 	}

@@ -1,5 +1,6 @@
 package com.twlquiz;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -48,6 +49,7 @@ public class TWLQuiz extends TWLQuizUtil {
 
 		initializeData();
 		loadPreferences();
+		loadButtons();
 		loadWordList("twl_threes");
 	}
 
@@ -56,10 +58,15 @@ public class TWLQuiz extends TWLQuizUtil {
 			listStreaks.put(LIST_TYPES[i], 0);
 		}
 	}
-
+	
 	private void loadPreferences() {
-		playSound = getSharedPreferences(PREFERENCES_FILE, 0).getBoolean("sound", false) ? true : false;
-		tileView = getSharedPreferences(PREFERENCES_FILE, 0).getBoolean("tileView", false) ? true : false;
+		playSound = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean("sound", true) ? true : false;
+		tileView = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean("tileView", true) ? true : false;
+	}
+	
+	private void loadButtons() {
+		populateWordContainer("Good", (LinearLayout)findViewById(R.id.goodButton), GOOD_LETTER_TYPE);
+		populateWordContainer("Bad", (LinearLayout)findViewById(R.id.badButton), BAD_LETTER_TYPE);
 	}
 
 	private void loadWordList(String list) {
@@ -147,7 +154,7 @@ public class TWLQuiz extends TWLQuizUtil {
 
 	public void displayWord(View view) {
 		switch (view.getId()) {
-		case R.id.pressedGood :
+		case R.id.goodButton :
 			if (!isGood) {
 				youGotItWrong();
 			} else {
@@ -157,7 +164,7 @@ public class TWLQuiz extends TWLQuizUtil {
 			logHistory(true);
 
 			break;
-		case R.id.pressedBad :
+		case R.id.badButton :
 			if (isGood) {
 				youGotItWrong();
 			} else {
@@ -400,6 +407,7 @@ public class TWLQuiz extends TWLQuizUtil {
 		switch(requestCode) {
 		case RESET_PREFERENCES:
 			loadPreferences();
+			loadButtons();
 			break;
 		default:
 			break;
