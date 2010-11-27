@@ -1,7 +1,6 @@
 package com.twlquiz;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -12,7 +11,6 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -203,9 +201,10 @@ public class TWLQuiz extends TWLQuizUtil {
 
 	private String getWord() {
 		String newWord = currentWord;
-		int random = new Random().nextInt(10);
 
 		while(newWord == currentWord) {
+			int random = new Random().nextInt(10);
+
 			if ((random <= 1) && !failList.isEmpty()) {
 				newWord = failWord();
 			} else if (random <= 5) {
@@ -325,13 +324,13 @@ public class TWLQuiz extends TWLQuizUtil {
 					letterText.setBackgroundColor(Color.BLACK);
 					letterText.setTextColor(Color.WHITE);
 				}
-				
+
 				break;
 			case REGULAR_LETTER_TYPE:
 				letterImage.setMaxHeight(QUIZ_LETTER_SIZE);
 				letterImage.setMaxWidth(QUIZ_LETTER_SIZE);
 				letterFileName = letterFileName.concat("letter_" + letters[i]);
-				
+
 				break;
 			default:
 				break;
@@ -374,15 +373,25 @@ public class TWLQuiz extends TWLQuizUtil {
 		case MENU_STATS:
 			Intent statsIntent = new Intent();
 			statsIntent.setClassName("com.twlquiz", "com.twlquiz.Stats");
-			startActivityForResult(statsIntent, 22);
+			startActivityForResult(statsIntent, 0);
 			return true;
 		case MENU_PREFS:
 			Intent prefIntent = new Intent();
 			prefIntent.setClassName("com.twlquiz", "com.twlquiz.Preferences");
-			startActivityForResult(prefIntent, 22);
+			startActivityForResult(prefIntent, RESET_PREFERENCES);
 			return true;
 		default:
 			return false;
+		}
+	}
+
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch(requestCode) {
+		case RESET_PREFERENCES:
+			loadPreferences();
+			break;
+		default:
+			break;
 		}
 	}
 }

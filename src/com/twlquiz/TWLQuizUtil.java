@@ -1,6 +1,7 @@
 package com.twlquiz;
 
 import android.app.Activity;
+import android.content.Intent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,6 +25,8 @@ public class TWLQuizUtil extends Activity {
 
 	protected static final List<Character> CONSONANTS = Arrays.asList('B','C','D','F','G','H','J','K','L','M','N','P','Q','R','S','T','V','W','X','Z');
 	protected static final List<Character> VOWELS     = Arrays.asList('A','E','I','O','U','Y');
-	
+
+	protected static final int RESET_PREFERENCES = 1;
+
 	protected static final String PREFERENCES_FILE = "twl_quiz_prefs";
 }

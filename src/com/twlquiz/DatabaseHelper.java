@@ -12,6 +12,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public DatabaseHelper(Context context) {
 		super(context, DATABASE_NAME, null, 2);
 	}
+	
+	public static void clearStats(SQLiteDatabase database) {
+		database.execSQL("update streaks set high=0");
+	}
 
 	public void onCreate(SQLiteDatabase database) {		
 		database.execSQL("create table streaks (id integer not null, type string, high integer, primary key(id), unique(type))");

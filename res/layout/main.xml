@@ -42,9 +42,11 @@
 				android:src="@drawable/bad_letter_d" />
 		</LinearLayout>
 	</RelativeLayout>
-
-	<ScrollView android:layout_below="@+id/buttons"
-		android:scrollbarAlwaysDrawHorizontalTrack="true"
+	<TextView android:layout_height="10dip" android:id="@+id/spacer"
+		android:layout_below="@+id/buttons" android:layout_width="fill_parent"
+		android:background="#ffffff" />
+	<ScrollView android:layout_below="@+id/spacer"
+		android:paddingTop="10dip" android:scrollbarAlwaysDrawHorizontalTrack="true"
 		android:layout_width="fill_parent" android:layout_height="wrap_content">
 		<TableLayout android:id="@+id/history"
 			android:layout_width="fill_parent" android:layout_height="fill_parent" />
