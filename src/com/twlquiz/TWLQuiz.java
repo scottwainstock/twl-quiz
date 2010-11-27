@@ -32,12 +32,9 @@ public class TWLQuiz extends TWLQuizUtil {
 	private LinearLayout wordContainer;
 	private TableLayout historyTable;
 	private SQLiteDatabase database;
-	private String currentList;
-	private String currentWord;
-	private int streakCounter = 0;
-	private boolean isGood = false;
-	private boolean tileView = false;
-	private boolean playSound = false;
+	private String currentList, currentWord;
+	private boolean isGood, tileView, playSound = false;
+	private HashMap<String, Integer> listStreaks = new HashMap<String, Integer>();
 	private HashMap<String, String> wordList = new HashMap<String, String>();
 	private HashMap<String, Integer> failList = new HashMap<String, Integer>();
 
@@ -49,8 +46,15 @@ public class TWLQuiz extends TWLQuizUtil {
 		historyTable = (TableLayout)findViewById(R.id.history);		
 		database = new DatabaseHelper(this).getWritableDatabase();
 
+		initializeData();
 		loadPreferences();
 		loadWordList("twl_threes");
+	}
+
+	private void initializeData() {
+		for (int i = 0; i < LIST_TYPES.length; i++) {
+			listStreaks.put(LIST_TYPES[i], 0);
+		}
 	}
 
 	private void loadPreferences() {
@@ -59,7 +63,6 @@ public class TWLQuiz extends TWLQuizUtil {
 	}
 
 	private void loadWordList(String list) {
-		streakCounter = 0;
 		failList.clear();
 		wordList.clear();
 		historyTable.removeAllViews();
@@ -97,11 +100,12 @@ public class TWLQuiz extends TWLQuizUtil {
 	}
 
 	private void incrementStreak() {
-		streakCounter++;
+		listStreaks.put("all", listStreaks.get("all") + 1);
+		listStreaks.put(currentList, listStreaks.get(currentList) + 1);
 
-		if (streakCounter % DISPLAY_STREAK_MILESTONE == 0) {
+		if (listStreaks.get("all") % DISPLAY_STREAK_MILESTONE == 0) {
 			playSound("streak");
-			Toast.makeText(getBaseContext(), "STREAK: " + Integer.toString(streakCounter), Toast.LENGTH_SHORT).show();
+			Toast.makeText(getBaseContext(), "STREAK: " + Integer.toString(listStreaks.get("all")), Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -120,17 +124,24 @@ public class TWLQuiz extends TWLQuizUtil {
 	private void youGotItWrong() {
 		playSound("bad");
 
-		Cursor cursor = database.rawQuery("select high from streaks where type=?", new String[] { currentList });
+		Cursor cursor = database.rawQuery("select type, high from streaks where type in (?, ?, ?, ?)", LIST_TYPES);
 		cursor.moveToFirst();
-		int currentHigh = cursor.getInt(cursor.getColumnIndex("high"));
 
-		if ((currentHigh == 0) || (currentHigh < streakCounter)) {
-			database.execSQL("update streaks set high = ? where type = ?", new String[] { Integer.toString(streakCounter), currentList });
+		while(cursor.isAfterLast() == false) {
+			int high = cursor.getInt(cursor.getColumnIndex("high"));
+			String type = cursor.getString(cursor.getColumnIndex("type"));
+
+			if ((high == 0) || (high < listStreaks.get(type))) {
+				database.execSQL("update streaks set high = ? where type = ?", new String[] { Integer.toString(listStreaks.get(type)), type });
+			}
+
+			cursor.moveToNext();
 		}
 
 		cursor.close();
 
-		streakCounter = 0;
+		listStreaks.put("all", 0);
+		listStreaks.put(currentList, 0);
 		addToFailList();
 	}
 
@@ -310,8 +321,8 @@ public class TWLQuiz extends TWLQuizUtil {
 					letterImage.setMaxWidth(HISTORICAL_LETTER_SIZE);
 					letterFileName = letterFileName.concat("bad_letter_" + letters[i]);
 				} else {
-					letterText.setBackgroundColor(Color.WHITE);
-					letterText.setTextColor(Color.BLACK);
+					letterText.setBackgroundColor(Color.BLACK);
+					letterText.setTextColor(Color.WHITE);
 				}
 
 				break;
@@ -321,8 +332,8 @@ public class TWLQuiz extends TWLQuizUtil {
 					letterImage.setMaxWidth(HISTORICAL_LETTER_SIZE);
 					letterFileName = letterFileName.concat("good_letter_" + letters[i]);
 				} else {
-					letterText.setBackgroundColor(Color.BLACK);
-					letterText.setTextColor(Color.WHITE);
+					letterText.setBackgroundColor(Color.WHITE);
+					letterText.setTextColor(Color.BLACK);
 				}
 
 				break;

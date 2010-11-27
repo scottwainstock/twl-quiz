@@ -1,12 +1,13 @@
 package com.twlquiz;
 
 import android.app.Activity;
-import android.content.Intent;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class TWLQuizUtil extends Activity {
+	protected static final String[] LIST_TYPES = { "twl_twos", "twl_threes", "twl_fours", "all" };
+	
 	protected static final int BAD_LETTER_TYPE        = 0;
 	protected static final int GOOD_LETTER_TYPE       = 1;
 	protected static final int REGULAR_LETTER_TYPE    = 2;
@@ -28,5 +29,6 @@ public class TWLQuizUtil extends Activity {
 
 	protected static final int RESET_PREFERENCES = 1;
 
+	protected static final String DATABASE_NAME    = "twl_quiz";
 	protected static final String PREFERENCES_FILE = "twl_quiz_prefs";
 }
