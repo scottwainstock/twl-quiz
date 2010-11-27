@@ -45,11 +45,11 @@ public class TWLQuiz extends TWLQuizUtil {
 		wordContainer = (LinearLayout)findViewById(R.id.wordContainer);
 		historyTable = (TableLayout)findViewById(R.id.history);		
 		database = new DatabaseHelper(this).getWritableDatabase();
-		
+
 		loadPreferences();
 		loadWordList("twl_threes");
 	}
-	
+
 	private void loadPreferences() {
 	}
 
@@ -98,14 +98,14 @@ public class TWLQuiz extends TWLQuizUtil {
 			Toast.makeText(getBaseContext(), "STREAK: " + Integer.toString(streakCounter), Toast.LENGTH_SHORT).show();
 		}
 	}
-	
+
 	private void playSound(String fileName) {
 		SharedPreferences preferences = getSharedPreferences(PREFERENCES_FILE, 0);
 		if (preferences.getBoolean("sound", false)) {
 			MediaPlayer.create(getBaseContext(), getResources().getIdentifier("com.twlquiz:raw/" + fileName, null, null)).start();		
 		}
 	}
-	
+
 	private void youGotItRight() {
 		playSound("good");
 		incrementStreak();
@@ -114,7 +114,7 @@ public class TWLQuiz extends TWLQuizUtil {
 
 	private void youGotItWrong() {
 		playSound("bad");
-		
+
 		Cursor cursor = database.rawQuery("select high from streaks where type=?", new String[] { currentList });
 		cursor.moveToFirst();
 		int currentHigh = cursor.getInt(cursor.getColumnIndex("high"));
@@ -195,15 +195,20 @@ public class TWLQuiz extends TWLQuizUtil {
 	}
 
 	private String getWord() {
+		String newWord = currentWord;
 		int random = new Random().nextInt(10);
 
-		if ((random <= 1) && !failList.isEmpty()) {
-			currentWord = failWord();
-		} else if (random <= 5) {
-			currentWord = realWord();
-		} else {
-			currentWord = badWord();
+		while(newWord == currentWord) {
+			if ((random <= 1) && !failList.isEmpty()) {
+				newWord = failWord();
+			} else if (random <= 5) {
+				newWord = realWord();
+			} else {
+				newWord = badWord();
+			}
 		}
+
+		currentWord = newWord;
 
 		return currentWord;
 	}
