@@ -13,7 +13,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		super(context, DATABASE_NAME, null, 2);
 	}
 
-	public void onCreate(SQLiteDatabase database) {
+	public void onCreate(SQLiteDatabase database) {		
 		database.execSQL("create table streaks (id integer not null, type string, high integer, primary key(id), unique(type))");
 
 		ContentValues contentValues = new ContentValues();

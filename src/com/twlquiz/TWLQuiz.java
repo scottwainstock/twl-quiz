@@ -1,11 +1,11 @@
 package com.twlquiz;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -44,8 +44,12 @@ public class TWLQuiz extends TWLQuizUtil {
 		wordContainer = (LinearLayout)findViewById(R.id.wordContainer);
 		historyTable = (TableLayout)findViewById(R.id.history);		
 		database = new DatabaseHelper(this).getWritableDatabase();
-
+		
+		loadPreferences();
 		loadWordList("twl_threes");
+	}
+	
+	private void loadPreferences() {
 	}
 
 	private void loadWordList(String list) {
@@ -71,12 +75,12 @@ public class TWLQuiz extends TWLQuizUtil {
 		getWord();
 	}
 
-	public void addToFailList() {
+	private void addToFailList() {
 		failList.remove(currentWord);
 		failList.put(currentWord, INITIAL_FAIL_LIST_COUNTER);		
 	}
 
-	public void decrementFailList() {
+	private void decrementFailList() {
 		if (failList.containsKey(currentWord)) {
 			if (failList.get(currentWord) == 0) {
 				failList.remove(currentWord);
@@ -86,23 +90,29 @@ public class TWLQuiz extends TWLQuizUtil {
 		}
 	}
 
-	public void incrementStreak() {
+	private void incrementStreak() {
 		streakCounter++;
 
 		if (streakCounter % DISPLAY_STREAK_MILESTONE == 0) {
 			Toast.makeText(getBaseContext(), "STREAK: " + Integer.toString(streakCounter), Toast.LENGTH_SHORT).show();
 		}
 	}
-
-	public void youGotItRight() {
-		MediaPlayer.create(getBaseContext(), R.raw.good).start();
-
+	
+	private void playSound(String fileName) {
+		SharedPreferences preferences = getSharedPreferences(PREFERENCES_FILE, 0);
+		if (preferences.getBoolean("sound", false)) {
+			MediaPlayer.create(getBaseContext(), getResources().getIdentifier("com.twlquiz:raw/" + fileName, null, null)).start();		
+		}
+	}
+	
+	private void youGotItRight() {
+		playSound("good");
 		incrementStreak();
 		decrementFailList();
 	}
 
-	public void youGotItWrong() {
-		MediaPlayer.create(getBaseContext(), R.raw.bad).start();
+	private void youGotItWrong() {
+		playSound("bad");
 		
 		Cursor cursor = database.rawQuery("select high from streaks where type=?", new String[] { currentList });
 		cursor.moveToFirst();
@@ -311,6 +321,7 @@ public class TWLQuiz extends TWLQuizUtil {
 		menu.add(MENU_THREES, MENU_THREES, MENU_THREES, "3s");
 		menu.add(MENU_FOURS, MENU_FOURS, MENU_FOURS, "4s");
 		menu.add(MENU_STATS, MENU_STATS, MENU_STATS, "Stats");
+		menu.add(MENU_PREFS, MENU_PREFS, MENU_PREFS, "Setup");
 
 		return true;
 	}
@@ -327,10 +338,15 @@ public class TWLQuiz extends TWLQuizUtil {
 			loadWordList("twl_fours");
 			return true;
 		case MENU_STATS:
-			Intent myIntent = new Intent();
-			myIntent.setClassName("com.twlquiz", "com.twlquiz.Stats");
-			startActivityForResult(myIntent, 22);
-
+			Intent statsIntent = new Intent();
+			statsIntent.setClassName("com.twlquiz", "com.twlquiz.Stats");
+			startActivityForResult(statsIntent, 22);
+			return true;
+		case MENU_PREFS:
+			Intent prefIntent = new Intent();
+			prefIntent.setClassName("com.twlquiz", "com.twlquiz.Preferences");
+			startActivityForResult(prefIntent, 22);
+			return true;
 		default:
 			return false;
 		}
