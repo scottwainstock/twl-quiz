@@ -5,4 +5,11 @@
 	<ToggleButton android:layout_width="wrap_content"
 		android:id="@+id/sound" android:layout_height="wrap_content"
 		android:textOn="Sound" android:textOff="Sound" />
+	<ToggleButton android:layout_width="wrap_content"
+		android:layout_toRightOf="@+id/sound" android:id="@+id/tile"
+		android:layout_height="wrap_content" android:textOn="Tile View"
+		android:textOff="Tile View" />
+	<Button android:layout_below="@+id/sound" android:layout_width="wrap_content"
+		android:text="Reset Statistic Data" android:layout_height="wrap_content"
+		android:id="@+id/reset_stats" />
 </RelativeLayout>

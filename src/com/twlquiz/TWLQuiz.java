@@ -1,11 +1,13 @@
 package com.twlquiz;
 
+import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.TableRow.LayoutParams;
 
@@ -30,10 +33,9 @@ public class TWLQuiz extends TWLQuizUtil {
 	private LinearLayout wordContainer;
 	private TableLayout historyTable;
 	private SQLiteDatabase database;
-	private String currentList;
-	private String currentWord;
-	private int streakCounter = 0;
-	private boolean isGood = false;
+	private String currentList, currentWord;
+	private boolean isGood, tileView, playSound = false;
+	private HashMap<String, Integer> listStreaks = new HashMap<String, Integer>();
 	private HashMap<String, String> wordList = new HashMap<String, String>();
 	private HashMap<String, Integer> failList = new HashMap<String, Integer>();
 
@@ -44,16 +46,30 @@ public class TWLQuiz extends TWLQuizUtil {
 		wordContainer = (LinearLayout)findViewById(R.id.wordContainer);
 		historyTable = (TableLayout)findViewById(R.id.history);		
 		database = new DatabaseHelper(this).getWritableDatabase();
-		
+
+		initializeData();
 		loadPreferences();
+		loadButtons();
 		loadWordList("twl_threes");
+	}
+
+	private void initializeData() {
+		for (int i = 0; i < LIST_TYPES.length; i++) {
+			listStreaks.put(LIST_TYPES[i], 0);
+		}
 	}
 	
 	private void loadPreferences() {
+		playSound = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean("sound", true) ? true : false;
+		tileView = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean("tileView", true) ? true : false;
+	}
+	
+	private void loadButtons() {
+		populateWordContainer("Good", (LinearLayout)findViewById(R.id.goodButton), GOOD_LETTER_TYPE);
+		populateWordContainer("Bad", (LinearLayout)findViewById(R.id.badButton), BAD_LETTER_TYPE);
 	}
 
 	private void loadWordList(String list) {
-		streakCounter = 0;
 		failList.clear();
 		wordList.clear();
 		historyTable.removeAllViews();
@@ -91,20 +107,21 @@ public class TWLQuiz extends TWLQuizUtil {
 	}
 
 	private void incrementStreak() {
-		streakCounter++;
+		listStreaks.put("all", listStreaks.get("all") + 1);
+		listStreaks.put(currentList, listStreaks.get(currentList) + 1);
 
-		if (streakCounter % DISPLAY_STREAK_MILESTONE == 0) {
-			Toast.makeText(getBaseContext(), "STREAK: " + Integer.toString(streakCounter), Toast.LENGTH_SHORT).show();
+		if (listStreaks.get("all") % DISPLAY_STREAK_MILESTONE == 0) {
+			playSound("streak");
+			Toast.makeText(getBaseContext(), "STREAK: " + Integer.toString(listStreaks.get("all")), Toast.LENGTH_SHORT).show();
 		}
 	}
-	
+
 	private void playSound(String fileName) {
-		SharedPreferences preferences = getSharedPreferences(PREFERENCES_FILE, 0);
-		if (preferences.getBoolean("sound", false)) {
+		if (playSound) {
 			MediaPlayer.create(getBaseContext(), getResources().getIdentifier("com.twlquiz:raw/" + fileName, null, null)).start();		
 		}
 	}
-	
+
 	private void youGotItRight() {
 		playSound("good");
 		incrementStreak();
@@ -113,24 +130,31 @@ public class TWLQuiz extends TWLQuizUtil {
 
 	private void youGotItWrong() {
 		playSound("bad");
-		
-		Cursor cursor = database.rawQuery("select high from streaks where type=?", new String[] { currentList });
-		cursor.moveToFirst();
-		int currentHigh = cursor.getColumnIndex("high");
 
-		if ((currentHigh == 0) || (currentHigh > streakCounter)) {
-			database.execSQL("update streaks set high = ? where type = ?", new String[] { Integer.toString(streakCounter), currentList });
+		Cursor cursor = database.rawQuery("select type, high from streaks where type in (?, ?, ?, ?)", LIST_TYPES);
+		cursor.moveToFirst();
+
+		while(cursor.isAfterLast() == false) {
+			int high = cursor.getInt(cursor.getColumnIndex("high"));
+			String type = cursor.getString(cursor.getColumnIndex("type"));
+
+			if ((high == 0) || (high < listStreaks.get(type))) {
+				database.execSQL("update streaks set high = ? where type = ?", new String[] { Integer.toString(listStreaks.get(type)), type });
+			}
+
+			cursor.moveToNext();
 		}
 
 		cursor.close();
 
-		streakCounter = 0;
+		listStreaks.put("all", 0);
+		listStreaks.put(currentList, 0);
 		addToFailList();
 	}
 
 	public void displayWord(View view) {
 		switch (view.getId()) {
-		case R.id.pressedGood :
+		case R.id.goodButton :
 			if (!isGood) {
 				youGotItWrong();
 			} else {
@@ -140,7 +164,7 @@ public class TWLQuiz extends TWLQuizUtil {
 			logHistory(true);
 
 			break;
-		case R.id.pressedBad :
+		case R.id.badButton :
 			if (isGood) {
 				youGotItWrong();
 			} else {
@@ -194,15 +218,21 @@ public class TWLQuiz extends TWLQuizUtil {
 	}
 
 	private String getWord() {
-		int random = new Random().nextInt(10);
+		String newWord = currentWord;
 
-		if ((random <= 1) && !failList.isEmpty()) {
-			currentWord = failWord();
-		} else if (random <= 5) {
-			currentWord = realWord();
-		} else {
-			currentWord = badWord();
+		while(newWord == currentWord) {
+			int random = new Random().nextInt(10);
+
+			if ((random <= 1) && !failList.isEmpty()) {
+				newWord = failWord();
+			} else if (random <= 5) {
+				newWord = realWord();
+			} else {
+				newWord = badWord();
+			}
 		}
+
+		currentWord = newWord;
 
 		return currentWord;
 	}
@@ -278,39 +308,60 @@ public class TWLQuiz extends TWLQuizUtil {
 	}
 
 	private LinearLayout populateWordContainer(String word, LinearLayout container, int letterType) {
-		word = word.toLowerCase();
 		container.removeAllViews();
 
-		char[] letters = word.toCharArray();
+		if (tileView || (letterType == REGULAR_LETTER_TYPE)) {
+			word = word.toLowerCase();
+		}
 
+		char[] letters = word.toCharArray();
 		for (int i = 0; i < letters.length; i++) {
 			String letterFileName = "com.twlquiz:drawable/";
+			TextView letterText = new TextView(this);
 			ImageView letterImage = new ImageView(this);
 			letterImage.setAdjustViewBounds(true);
 
 			switch (letterType) {
 			case BAD_LETTER_TYPE:
-				letterImage.setMaxHeight(HISTORICAL_LETTER_SIZE);
-				letterImage.setMaxWidth(HISTORICAL_LETTER_SIZE);
-				letterFileName = letterFileName.concat("bad_letter_" + letters[i]);
+				if (tileView) {
+					letterImage.setMaxHeight(HISTORICAL_LETTER_SIZE);
+					letterImage.setMaxWidth(HISTORICAL_LETTER_SIZE);
+					letterFileName = letterFileName.concat("bad_letter_" + letters[i]);
+				} else {
+					letterText.setBackgroundColor(Color.BLACK);
+					letterText.setTextColor(Color.WHITE);
+				}
+
 				break;
 			case GOOD_LETTER_TYPE:
-				letterImage.setMaxHeight(HISTORICAL_LETTER_SIZE);
-				letterImage.setMaxWidth(HISTORICAL_LETTER_SIZE);
-				letterFileName = letterFileName.concat("good_letter_" + letters[i]);
+				if (tileView) {
+					letterImage.setMaxHeight(HISTORICAL_LETTER_SIZE);
+					letterImage.setMaxWidth(HISTORICAL_LETTER_SIZE);
+					letterFileName = letterFileName.concat("good_letter_" + letters[i]);
+				} else {
+					letterText.setBackgroundColor(Color.WHITE);
+					letterText.setTextColor(Color.BLACK);
+				}
+
 				break;
 			case REGULAR_LETTER_TYPE:
 				letterImage.setMaxHeight(QUIZ_LETTER_SIZE);
 				letterImage.setMaxWidth(QUIZ_LETTER_SIZE);
 				letterFileName = letterFileName.concat("letter_" + letters[i]);
+
 				break;
 			default:
 				break;
 			}
 
-			letterImage.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(letterFileName, null, null)));
-
-			container.addView(letterImage);
+			if (tileView || (letterType == REGULAR_LETTER_TYPE)) {
+				letterImage.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(letterFileName, null, null)));
+				container.addView(letterImage);
+			} else {
+				letterText.setTextSize(HISTORICAL_LETTER_SIZE);
+				letterText.setText(Character.toString(letters[i]));
+				container.addView(letterText);
+			}
 		}
 
 		return container;
@@ -340,15 +391,26 @@ public class TWLQuiz extends TWLQuizUtil {
 		case MENU_STATS:
 			Intent statsIntent = new Intent();
 			statsIntent.setClassName("com.twlquiz", "com.twlquiz.Stats");
-			startActivityForResult(statsIntent, 22);
+			startActivityForResult(statsIntent, 0);
 			return true;
 		case MENU_PREFS:
 			Intent prefIntent = new Intent();
 			prefIntent.setClassName("com.twlquiz", "com.twlquiz.Preferences");
-			startActivityForResult(prefIntent, 22);
+			startActivityForResult(prefIntent, RESET_PREFERENCES);
 			return true;
 		default:
 			return false;
+		}
+	}
+
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch(requestCode) {
+		case RESET_PREFERENCES:
+			loadPreferences();
+			loadButtons();
+			break;
+		default:
+			break;
 		}
 	}
 }

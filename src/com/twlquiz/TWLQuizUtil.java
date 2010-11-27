@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TWLQuizUtil extends Activity {
+	protected static final String[] LIST_TYPES = {"twl_twos", "twl_threes", "twl_fours", "all"};
+
 	protected static final int BAD_LETTER_TYPE        = 0;
 	protected static final int GOOD_LETTER_TYPE       = 1;
 	protected static final int REGULAR_LETTER_TYPE    = 2;
@@ -24,6 +26,9 @@ public class TWLQuizUtil extends Activity {
 
 	protected static final List<Character> CONSONANTS = Arrays.asList('B','C','D','F','G','H','J','K','L','M','N','P','Q','R','S','T','V','W','X','Z');
 	protected static final List<Character> VOWELS     = Arrays.asList('A','E','I','O','U','Y');
-	
-	protected static final String PREFERENCES_FILE = "twl_quiz_prefs";
+
+	protected static final int RESET_PREFERENCES = 1;
+
+	protected static final String PREFS_NAME    = "twl_quiz_prefs";
+	protected static final String DATABASE_NAME = "twl_quiz";
 }
