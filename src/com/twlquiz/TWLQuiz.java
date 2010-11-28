@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
@@ -42,6 +43,7 @@ public class TWLQuiz extends TWLQuizUtil {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
 		wordContainer = (LinearLayout)findViewById(R.id.wordContainer);
 		historyTable = (TableLayout)findViewById(R.id.history);		
@@ -58,12 +60,12 @@ public class TWLQuiz extends TWLQuizUtil {
 			listStreaks.put(LIST_TYPES[i], 0);
 		}
 	}
-	
+
 	private void loadPreferences() {
 		playSound = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean("sound", true) ? true : false;
 		tileView = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean("tileView", true) ? true : false;
 	}
-	
+
 	private void loadButtons() {
 		populateWordContainer("Good", (LinearLayout)findViewById(R.id.goodButton), GOOD_LETTER_TYPE);
 		populateWordContainer("Bad", (LinearLayout)findViewById(R.id.badButton), BAD_LETTER_TYPE);
