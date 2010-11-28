@@ -1,0 +1,24 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>TWL Quiz Stats</title>
+<script language="javascript" type="text/javascript" src="../jquery.js" />
+<script language="javascript" type="text/javascript" src="../jquery.flot.js" />
+
+<script id="source" language="javascript" type="text/javascript">
+    function load(){
+      $('title').html(window.twlquizchart.getGraphTitle());
+      window.twlquizchart.loadGraph();
+    }
+
+    function GotGraph(gdata) {
+      $.plot($("#placeholder"), gdata);
+    }
+  </script>
+</head>
+<body onload="load();">
+<div id="title"></div>
+<div id="placeholder" style="width: 100%; height: 250px;"></div>
+</body>
+</html>
